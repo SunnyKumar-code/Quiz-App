@@ -14,6 +14,6 @@ This is a simple and interactive Quiz App built using React. It fetches quiz que
 ## Live Demo
 
 Click the link below to try the app live:  
-[Quiz App Live Demo](https://sunnykumar-code.github.io/quiz-app/)
+[Quiz App Live Demo](https://quiz-app-nu-lyart.vercel.app/)
 
 
