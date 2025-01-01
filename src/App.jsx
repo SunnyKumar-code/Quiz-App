@@ -3,7 +3,7 @@ import axios from "axios";
 import Question from "./components/Question";
 import Score from "./components/Score";
 import Loader from "./components/Loader";
-import "./App.css";
+import styles from './App.module.css';
 
 const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple";
 
@@ -11,31 +11,35 @@ function App() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [timer, setTimer] = useState(10);
+  const [userAnswers, setUserAnswers] = useState([]);
+  const [timer, setTimer] = useState(5);
   const [isQuizComplete, setIsQuizComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch questions using Axios
+  const fetchQuestions = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(API_URL);
+      const formattedQuestions = response.data.results.map((question) => ({
+        question: question.question,
+        answers: shuffleAnswers([
+          ...question.incorrect_answers,
+          question.correct_answer,
+        ]),
+        correctAnswer: question.correct_answer,
+      }));
+      setQuestions(formattedQuestions);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get(API_URL);
-        const formattedQuestions = response.data.results.map((question) => ({
-          question: question.question,
-          answers: shuffleAnswers([
-            ...question.incorrect_answers,
-            question.correct_answer,
-          ]),
-          correctAnswer: question.correct_answer,
-        }));
-        setQuestions(formattedQuestions);
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-      }
-    };
     fetchQuestions();
   }, []);
 
-  // Timer logic
   useEffect(() => {
     if (timer > 0 && !isQuizComplete) {
       const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
@@ -45,36 +49,44 @@ function App() {
     }
   }, [timer, isQuizComplete]);
 
-  // Shuffle answers
-  const shuffleAnswers = (answers) => answers.sort(() => Math.random() - 0.1);
+  const shuffleAnswers = (answers) => answers.sort(() => Math.random() - 0.5);
 
-  // Handle user selecting an answer
   const handleAnswer = (answer) => {
-    if (answer === questions[currentQuestionIndex].correctAnswer) {
-      setScore(score + 1);
-    }
+    const currentQuestion = questions[currentQuestionIndex];
+    const isCorrect = answer === currentQuestion.correctAnswer;
+    if (isCorrect) setScore(score + 1);
+
+    setUserAnswers([
+      ...userAnswers,
+      {
+        question: currentQuestion.question,
+        selected: answer,
+        correct: currentQuestion.correctAnswer,
+      },
+    ]);
+
     handleNextQuestion();
   };
 
-  // Handle moving to the next question
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setTimer(10);
+      setTimer(5);
     } else {
       setIsQuizComplete(true);
     }
   };
 
-  // Restart quiz
   const restartQuiz = () => {
     setCurrentQuestionIndex(0);
     setScore(0);
-    setTimer(10);
+    setUserAnswers([]);
+    setTimer(5);
     setIsQuizComplete(false);
+    fetchQuestions();
   };
 
-  if (questions.length === 0) {
+  if (isLoading) {
     return <Loader />;
   }
 
@@ -83,6 +95,7 @@ function App() {
       <Score
         score={score}
         totalQuestions={questions.length}
+        userAnswers={userAnswers}
         restartQuiz={restartQuiz}
       />
     );
@@ -91,7 +104,7 @@ function App() {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="quiz-container">
+    <div className={styles.quizContainer}>
       <h1>Quiz App</h1>
       <Question
         question={currentQuestion}
@@ -99,7 +112,7 @@ function App() {
         totalQuestions={questions.length}
         handleAnswer={handleAnswer}
       />
-      <p>Time Remaining: {timer}s</p>
+      <p className={styles.timer}>Time Remaining: {timer}s</p>
     </div>
   );
 }
