@@ -77,6 +77,19 @@ function App() {
     }
   };
 
+  const handleSkipQuestion = () => {
+    setUserAnswers([
+      ...userAnswers,
+      {
+        question: questions[currentQuestionIndex].question,
+        selected: "Skipped",
+        correct: questions[currentQuestionIndex].correctAnswer,
+      },
+    ]);
+
+    handleNextQuestion();
+  };
+
   const restartQuiz = () => {
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -113,6 +126,9 @@ function App() {
         handleAnswer={handleAnswer}
       />
       <p className={styles.timer}>Time Remaining: {timer}s</p>
+      <button onClick={handleSkipQuestion} className={styles.skipButton}>
+        Skip Question
+      </button>
     </div>
   );
 }
