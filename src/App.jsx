@@ -1,35 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Question from "./components/Question";
+import Score from "./components/Score";
+import Loader from "./components/Loader";
+import "./App.css";
+
+const API_URL = "https://opentdb.com/api.php?amount=10&type=multiple";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [timer, setTimer] = useState(10);
+  const [isQuizComplete, setIsQuizComplete] = useState(false);
+
+  // Fetch questions using Axios
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(API_URL);
+        const formattedQuestions = response.data.results.map((question) => ({
+          question: question.question,
+          answers: shuffleAnswers([
+            ...question.incorrect_answers,
+            question.correct_answer,
+          ]),
+          correctAnswer: question.correct_answer,
+        }));
+        setQuestions(formattedQuestions);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+      }
+    };
+    fetchQuestions();
+  }, []);
+
+  // Timer logic
+  useEffect(() => {
+    if (timer > 0 && !isQuizComplete) {
+      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+      return () => clearInterval(interval);
+    } else if (!isQuizComplete) {
+      handleNextQuestion();
+    }
+  }, [timer, isQuizComplete]);
+
+  // Shuffle answers
+  const shuffleAnswers = (answers) => answers.sort(() => Math.random() - 0.1);
+
+  // Handle user selecting an answer
+  const handleAnswer = (answer) => {
+    if (answer === questions[currentQuestionIndex].correctAnswer) {
+      setScore(score + 1);
+    }
+    handleNextQuestion();
+  };
+
+  // Handle moving to the next question
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setTimer(10);
+    } else {
+      setIsQuizComplete(true);
+    }
+  };
+
+  // Restart quiz
+  const restartQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setTimer(10);
+    setIsQuizComplete(false);
+  };
+
+  if (questions.length === 0) {
+    return <Loader />;
+  }
+
+  if (isQuizComplete) {
+    return (
+      <Score
+        score={score}
+        totalQuestions={questions.length}
+        restartQuiz={restartQuiz}
+      />
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="quiz-container">
+      <h1>Quiz App</h1>
+      <Question
+        question={currentQuestion}
+        currentQuestionIndex={currentQuestionIndex}
+        totalQuestions={questions.length}
+        handleAnswer={handleAnswer}
+      />
+      <p>Time Remaining: {timer}s</p>
+    </div>
+  );
 }
 
-export default App
+export default App;
