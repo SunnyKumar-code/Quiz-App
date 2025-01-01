@@ -1,8 +1,19 @@
-# React + Vite
+# Quiz App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a simple and interactive Quiz App built using React. It fetches quiz questions from the Open Trivia Database (OpenDB API) and provides an engaging way to test your knowledge.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Fetches quiz questions dynamically from the OpenDB API.
+- Includes a countdown timer of 5 seconds for each question.
+- Displays four answer options for each question.
+- Tracks and displays the user's progress and score.
+- Shows a detailed review of questions, selected answers, and correct answers on the result page.
+- Allows users to restart the quiz with fresh questions.
+
+## Live Demo
+
+Click the link below to try the app live:  
+[Quiz App Live Demo](https://sunnykumar-code.github.io/quiz-app/)
+
+
